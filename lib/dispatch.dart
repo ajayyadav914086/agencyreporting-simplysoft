@@ -37,7 +37,7 @@ class _DispatchState extends State<Dispatch> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: const [
-                        Text("VCH NO;-"),
+                        Text("VCH NO-"),
                         Text("DATE:-")
                       ],
                     ),

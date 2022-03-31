@@ -1,24 +1,19 @@
-/// Flutter code sample for AppBar
-
 import 'dart:convert';
-
+import 'package:agencyreporting/payablefilter.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_search_bar/flutter_search_bar.dart';
 import 'package:intl/intl.dart';
-
 import 'constants.dart';
-import 'dispatchdetail.dart';
 
-/// This is the stateless widget that the main application instantiates.
-class Dispatch extends StatefulWidget {
-  const Dispatch({Key? key}) : super(key: key);
+class Payable extends StatefulWidget {
+  const Payable({Key? key}) : super(key: key);
 
   @override
-  State<Dispatch> createState() => _DispatchState();
+  State<Payable> createState() => _PayableState();
 }
 
-class _DispatchState extends State<Dispatch> {
+class _PayableState extends State<Payable> {
   late Response response;
   Dio dio = Dio();
   var apidata;
@@ -33,6 +28,7 @@ class _DispatchState extends State<Dispatch> {
     getData();
     super.initState();
   }
+
   Widget today = SimpleDialogOption(
     child: const Text('Today'),
     onPressed: () {
@@ -94,36 +90,39 @@ class _DispatchState extends State<Dispatch> {
     );
   }
 
-  AppBar buildAppBar(BuildContext context){
+  AppBar buildAppBar(BuildContext context) {
     return AppBar(
-      title: const Text("Dispatch"),
+      title: const Text("Payable"),
       actions: <Widget>[
         searchBar.getSearchAction(context),
-        IconButton(onPressed: () {
-          SimpleDialog dialog = SimpleDialog(
-            title: const Text('SELECT ONE OPTION:-'),
-            children: <Widget>[
-              today,
-              yesterday,
-              last7days,
-              last30days,
-              last365days,
-              customdate(context),
-            ],
-          );
+        IconButton(
+            onPressed: () {
+              SimpleDialog dialog = SimpleDialog(
+                title: const Text('SELECT ONE OPTION:-'),
+                children: <Widget>[
+                  today,
+                  yesterday,
+                  last7days,
+                  last30days,
+                  last365days,
+                  customdate(context),
+                ],
+              );
 
-          // show the dialog
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return dialog;
+              // show the dialog
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return dialog;
+                },
+              );
             },
-          );
-        }, icon: const Icon(Icons.calendar_today))
+            icon: const Icon(Icons.calendar_today))
       ],
     );
   }
-  void onSubmitted(String value) async{
+
+  void onSubmitted(String value) async {
     apidata = [];
     setState(() {
       loading = true;
@@ -135,13 +134,13 @@ class _DispatchState extends State<Dispatch> {
       "database": "DB_SIMPLYSOFT_MOBILE_AGENCY",
       "search": value.toString()
     });
-    response = await dio.post(Constants.DISPATCH_SEARCH, data: formData);
+    response = await dio.post(Constants.PAYABLE_SEARCH, data: formData);
     apidata = json.decode(response.data);
     loading = false;
     setState(() {});
   }
 
-  _DispatchState(){
+  _PayableState() {
     searchBar = SearchBar(
         inBar: false,
         setState: setState,
@@ -157,90 +156,60 @@ class _DispatchState extends State<Dispatch> {
 
   @override
   Widget build(BuildContext context) {
+    final ButtonStyle style =
+        TextButton.styleFrom(primary: Theme.of(context).colorScheme.onPrimary);
     return Scaffold(
         appBar: searchBar.build(context),
         body: loading
             ? const CircularProgressIndicator()
             : ListView(
-                controller: _controller,
                 children: apidata["data"].map<Widget>((result) {
-                  return InkWell(
-                    child: Card(
-                      child: Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text("VCH DATE: " + result['VCHDT']),
-                                Text("VCHNO: " + result['VCHNO'])
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 8,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  "CUSTOMER: " + result['CUSTOMER'],
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.indigo),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 8,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text("SUPPLIER: " + result['SUPPLIER']),
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 8,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text("BILL DATE: " + result['BILLDT']),
-                                Text("BILL NO: " + result['BILLNO'])
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 8,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text("QTY: " + result['QTY']),
-                                Text(
-                                  "BILL AMT:" + result['BILL_AMT'],
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.red),
-                                )
-                              ],
-                            ),
-                          ],
-                        ),
+                return InkWell(
+                  child: Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "PARTY NAME : " + result['GROUPCODE'],
+                            style: TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(
+                            height: 8,
+                          ),
+                          Text("AREA : " + result['AREANAME']),
+                          const SizedBox(
+                            height: 8,
+                          ),
+                          Text(
+                            "BALANCE : " + result['BILL_BAL_AMT'],
+                            style: TextStyle(
+                                color: Colors.red, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(
+                            height: 8,
+                          ),
+                          Text("CASH BALANCE : " + result['CASH_BAL_AMT']),
+                          const SizedBox(
+                            height: 8,
+                          ),
+                          Text("CHEQ BALANCE : " + result['CHEQ_BAL_AMT']),
+                        ],
                       ),
                     ),
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => DispatchDetail(
-                                  result['ENTRYID'].toString())));
-                    },
-                  );
-                }).toList()));
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                PayableFilter(result['GROUPCODE'])));
+                  },
+                );
+              }).toList()));
   }
 
   void getData() async {
@@ -253,7 +222,7 @@ class _DispatchState extends State<Dispatch> {
       "password": "PK@26~10#\$7860MP676\$",
       "database": "DB_SIMPLYSOFT_MOBILE_AGENCY"
     });
-    response = await dio.post(Constants.DISPATCH, data: formData);
+    response = await dio.post(Constants.PAYABLE, data: formData);
     apidata = json.decode(response.data);
     print(apidata['data']);
     loading = false;
@@ -266,7 +235,6 @@ class _DispatchState extends State<Dispatch> {
       print("Scroll to bottom");
     }
   }
-
   void customDateRange(context) async{
     DateTimeRange? picked = await showDateRangePicker(
         context: context,

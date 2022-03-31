@@ -1,38 +1,35 @@
-/// Flutter code sample for AppBar
-
 import 'dart:convert';
-
+import 'package:agencyreporting/Rcptandpymtdetail.dart';
+import 'package:agencyreporting/payabledetail.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_search_bar/flutter_search_bar.dart';
 import 'package:intl/intl.dart';
-
 import 'constants.dart';
-import 'dispatchdetail.dart';
+import 'outstandingmodel.dart';
 
-/// This is the stateless widget that the main application instantiates.
-class Dispatch extends StatefulWidget {
-  const Dispatch({Key? key}) : super(key: key);
+class PayableFilter extends StatefulWidget {
+  String groupcode;
+  PayableFilter(this.groupcode,{Key? key}) : super(key: key);
 
   @override
-  State<Dispatch> createState() => _DispatchState();
+  State<PayableFilter> createState() => _PayableFilterState(groupcode);
 }
 
-class _DispatchState extends State<Dispatch> {
+class _PayableFilterState extends State<PayableFilter> {
   late Response response;
   Dio dio = Dio();
   var apidata;
   bool loading = false;
-  late ScrollController _controller;
+  String groupcode;
   late SearchBar searchBar;
 
   @override
   void initState() {
-    _controller = ScrollController();
-    _controller.addListener(_scrollListener);
     getData();
     super.initState();
   }
+
   Widget today = SimpleDialogOption(
     child: const Text('Today'),
     onPressed: () {
@@ -96,7 +93,7 @@ class _DispatchState extends State<Dispatch> {
 
   AppBar buildAppBar(BuildContext context){
     return AppBar(
-      title: const Text("Dispatch"),
+      title: const Text("Payable"),
       actions: <Widget>[
         searchBar.getSearchAction(context),
         IconButton(onPressed: () {
@@ -133,15 +130,16 @@ class _DispatchState extends State<Dispatch> {
       "username": "SIMPLYSOFT",
       "password": "PK@26~10#\$7860MP676\$",
       "database": "DB_SIMPLYSOFT_MOBILE_AGENCY",
+      "group" : groupcode,
       "search": value.toString()
     });
-    response = await dio.post(Constants.DISPATCH_SEARCH, data: formData);
+    response = await dio.post(Constants.PAYABLEFILTER_SEARCH, data: formData);
     apidata = json.decode(response.data);
     loading = false;
     setState(() {});
   }
 
-  _DispatchState(){
+  _PayableFilterState(this.groupcode){
     searchBar = SearchBar(
         inBar: false,
         setState: setState,
@@ -157,90 +155,109 @@ class _DispatchState extends State<Dispatch> {
 
   @override
   Widget build(BuildContext context) {
+    final ButtonStyle style =
+    TextButton.styleFrom(primary: Theme.of(context).colorScheme.onPrimary);
     return Scaffold(
         appBar: searchBar.build(context),
         body: loading
             ? const CircularProgressIndicator()
             : ListView(
-                controller: _controller,
-                children: apidata["data"].map<Widget>((result) {
-                  return InkWell(
-                    child: Card(
-                      child: Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Column(
+            children: apidata["data"].map<Widget>((result) {
+              return InkWell(
+                child: Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(10),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text("VCH DATE: " + result['VCHDT']),
-                                Text("VCHNO: " + result['VCHNO'])
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 8,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  "CUSTOMER: " + result['CUSTOMER'],
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.indigo),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 8,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text("SUPPLIER: " + result['SUPPLIER']),
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 8,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text("BILL DATE: " + result['BILLDT']),
-                                Text("BILL NO: " + result['BILLNO'])
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 8,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text("QTY: " + result['QTY']),
-                                Text(
-                                  "BILL AMT:" + result['BILL_AMT'],
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.red),
-                                )
-                              ],
-                            ),
+                            Text("VCH NO: " + result['VCHNO']),
+                            Text("BILL AMT: " + result['BILL_AMT'])
                           ],
                         ),
-                      ),
+                        const SizedBox(
+                          height: 8,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text("VCH DATE: " + result['VCHDT']),
+                            Text(
+                              "BALANCE: "  + result['BILL_BAL_AMT'] ,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red),
+                            )
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 8,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text("PARTY: "+ result['GROUPCODE']),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 8,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text("SUPPLIER: "+ result['SUPPLIER_NAME']),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 8,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text("AREA: "+ result['AREANAME']),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 8,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text("CASH BALANCE: " + result['CASH_BAL_AMT']),
+                            Text("CHEQ BALANCE: " + result['CHEQ_BAL_AMT']),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 8,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text("NARRATION: " +  result['NARRATION']),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 8,
+                        ),
+                      ],
                     ),
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => DispatchDetail(
-                                  result['ENTRYID'].toString())));
-                    },
-                  );
-                }).toList()));
+                  ),
+                ),
+                onTap: (){
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => PayableDetail(result['WONO'].toString(),new Outstanding(result['VCHNO'], result['VCHDT'], result['BILL_AMT'], result['BILL_BAL_AMT'], result['GROUPCODE'], result['SUPPLIER_NAME'], result['AREANAME'], result['CASH_BAL_AMT'], result['CHEQ_BAL_AMT'], result['NARRATION']))));
+                },
+              );
+            }).toList()));
   }
 
   void getData() async {
@@ -251,22 +268,15 @@ class _DispatchState extends State<Dispatch> {
       "server": "45.35.97.83",
       "username": "SIMPLYSOFT",
       "password": "PK@26~10#\$7860MP676\$",
-      "database": "DB_SIMPLYSOFT_MOBILE_AGENCY"
+      "database": "DB_SIMPLYSOFT_MOBILE_AGENCY",
+      "group" : groupcode
     });
-    response = await dio.post(Constants.DISPATCH, data: formData);
+    response = await dio.post(Constants.PAYABLE_FILTER, data: formData);
     apidata = json.decode(response.data);
     print(apidata['data']);
     loading = false;
     setState(() {});
   }
-
-  _scrollListener() {
-    if (_controller.offset >= _controller.position.maxScrollExtent &&
-        !_controller.position.outOfRange) {
-      print("Scroll to bottom");
-    }
-  }
-
   void customDateRange(context) async{
     DateTimeRange? picked = await showDateRangePicker(
         context: context,

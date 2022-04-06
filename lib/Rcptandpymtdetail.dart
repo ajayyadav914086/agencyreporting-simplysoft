@@ -1,7 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share/share.dart';
 import 'constants.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 class ReceiptPaymentDetail extends StatefulWidget {
   late String title;
@@ -38,6 +43,96 @@ class _ReceiptPaymentDetailState extends State<ReceiptPaymentDetail> {
     return Scaffold(
         appBar: AppBar(
           title: Text(title),
+          actions: [IconButton(onPressed: () async {
+            final pdf = pw.Document();
+            pdf.addPage(pw.Page(
+                pageFormat: PdfPageFormat.a4,
+                build: (pw.Context context) {
+                  return pw.Column(
+                      children: [
+                        pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: pw.CrossAxisAlignment.end,
+                          children: [
+                            pw.Text("VCHNO: " + apidata['data'][0]['VCHNO']),
+                            pw.Text(
+                              "TOTAL AMT:" + amt,
+                              style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: PdfColors.red),
+                            )
+                          ],
+                        ),
+                        pw.SizedBox(
+                          height: 16,
+                        ),
+                        pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: pw.CrossAxisAlignment.end,
+                          children: [
+                            pw.Text(
+                              "VCH DATE: " + apidata['data'][0]['VCHDT'],
+                            ),
+                          ],
+                        ),
+                        pw.SizedBox(
+                          height: 16,
+                        ),
+                        pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                          children: [
+                            pw.Text("NARRATION: "),
+                          ],
+                        ),
+                        pw.SizedBox(
+                          height: 16,
+                        ),
+                        pw.Container(
+                          width: MediaQuery.of(this.context).size.width,
+                          padding: pw.EdgeInsets.all(10),
+                          color: PdfColors.grey,
+                          child: pw.Text("ITEMS (TOTAL ITEMS: " +
+                              apidata['data'].length.toString() +
+                              ")"),
+                        ),
+                        pw.SizedBox(
+                          height: 8,
+                        ),
+                        pw.Container(
+                          width: MediaQuery.of(this.context).size.width,
+                          child: pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                            children: [pw.Text("ACCOUNT"), pw.Text("DR"), pw.Text("CR")],
+                          ),
+                        ),
+                        pw.Container(
+                            width: MediaQuery.of(this.context).size.width,
+                            child: pw.Column(
+                                children: apidata["data"].map<pw.Padding>(
+                                      (result) {
+                                    return pw.Padding(
+                                      padding: pw.EdgeInsets.only(top: 16),
+                                      child: pw.Row(
+                                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          pw.Text(result['GROUPNAME']),
+                                          pw.Text(result['DR_AMT']),
+                                          pw.Text(result['CR_AMT']),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ).toList()))
+                      ],
+                  );
+                }));
+            Directory appDocDir = await getApplicationDocumentsDirectory();
+            String appDocPath = appDocDir.path;
+            final file = File(appDocPath + '/example.pdf');
+            await file.writeAsBytes(await pdf.save());
+            Share.shareFiles([appDocPath + '/example.pdf'],
+            text: 'Great picture');
+          }, icon: Icon(Icons.share))],
         ),
         body: loading
             ? const CircularProgressIndicator()
@@ -82,7 +177,7 @@ class _ReceiptPaymentDetailState extends State<ReceiptPaymentDetail> {
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: const [
+                            children: [
                               Text("NARRATION: ",
                                   style: TextStyle(color: Colors.white)),
                             ],
@@ -111,7 +206,8 @@ class _ReceiptPaymentDetailState extends State<ReceiptPaymentDetail> {
                   Container(
                       width: MediaQuery.of(context).size.width,
                       color: Colors.red[200],
-                      padding: const EdgeInsets.only(left: 10,right: 10,bottom: 10),
+                      padding: const EdgeInsets.only(
+                          left: 10, right: 10, bottom: 10),
                       child: Column(
                           children: apidata["data"].map<Widget>(
                         (result) {

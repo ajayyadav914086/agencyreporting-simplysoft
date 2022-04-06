@@ -1,10 +1,15 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:agencyreporting/payablefilter.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_search_bar/flutter_search_bar.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share/share.dart';
 import 'constants.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 class Payable extends StatefulWidget {
   const Payable({Key? key}) : super(key: key);
@@ -20,71 +25,93 @@ class _PayableState extends State<Payable> {
   bool loading = false;
   late ScrollController _controller;
   late SearchBar searchBar;
+  late var startdate;
+  late var enddate;
+  bool isDataEmpty = false;
+  DateFormat dateFormat = DateFormat("yyyy-MM-dd");
 
   @override
   void initState() {
     _controller = ScrollController();
     _controller.addListener(_scrollListener);
-    getData();
+    startdate = dateFormat.format(DateTime.now().subtract(Duration(days: 30)));
+    enddate = dateFormat.format(DateTime.now());
+    getData(startdate, enddate);
     super.initState();
   }
 
-  Widget today = SimpleDialogOption(
-    child: const Text('Today'),
-    onPressed: () {
-      DateFormat dateFormat =  DateFormat("dd-MM-yyyy");
-      final today = dateFormat.format(DateTime.now()) ;
-      print(today);
-    },
-  );
-  Widget yesterday = SimpleDialogOption(
-    child: const Text('Yesterday'),
-    onPressed: () {
-      DateFormat dateFormat =  DateFormat("dd-MM-yyyy");
-      final today = dateFormat.format(DateTime.now()) ;
-      final todaydatetime = dateFormat.parse(today);
-      final yesterday = todaydatetime.subtract(Duration(days: 1));
-      final yesterdayformat = dateFormat.format(yesterday);
-      print(yesterdayformat);
-    },
-  );
-  Widget last7days = SimpleDialogOption(
-    child: const Text('Last 7 Days'),
-    onPressed: () {
-      DateFormat dateFormat =  DateFormat("dd-MM-yyyy");
-      final today = dateFormat.format(DateTime.now()) ;
-      final todaydatetime = dateFormat.parse(today);
-      final yesterday = todaydatetime.subtract(Duration(days: 7));
-      final yesterdayformat = dateFormat.format(yesterday);
-      print(yesterdayformat);
-    },
-  );
-  Widget last30days = SimpleDialogOption(
-    child: const Text('last 30 Days'),
-    onPressed: () {
-      DateFormat dateFormat =  DateFormat("dd-MM-yyyy");
-      final today = dateFormat.format(DateTime.now()) ;
-      final todaydatetime = dateFormat.parse(today);
-      final yesterday = todaydatetime.subtract(Duration(days: 30));
-      final yesterdayformat = dateFormat.format(yesterday);
-      print(yesterdayformat);
-    },
-  );
-  Widget last365days = SimpleDialogOption(
-    child: const Text('Last 365 Days'),
-    onPressed: () {
-      DateFormat dateFormat =  DateFormat("dd-MM-yyyy");
-      final today = dateFormat.format(DateTime.now()) ;
-      final todaydatetime = dateFormat.parse(today);
-      final yesterday = todaydatetime.subtract(Duration(days: 365));
-      final yesterdayformat = dateFormat.format(yesterday);
-      print(yesterdayformat);
-    },
-  );
-  Widget customdate(context){
+  Widget today(context) {
+    return SimpleDialogOption(
+      child: const Text('Today'),
+      onPressed: () {
+        final today = dateFormat.format(DateTime.now());
+        getData(today, today);
+        Navigator.pop(context);
+      },
+    );
+  }
+
+  Widget yesterday(context) {
+    return SimpleDialogOption(
+      child: const Text('Yesterday'),
+      onPressed: () {
+        final today = dateFormat.format(DateTime.now());
+        final todaydatetime = dateFormat.parse(today);
+        final yesterday = todaydatetime.subtract(Duration(days: 1));
+        final yesterdayformat = dateFormat.format(yesterday);
+        getData(yesterdayformat, yesterdayformat);
+        Navigator.pop(context);
+      },
+    );
+  }
+
+  Widget last7days(context) {
+    return SimpleDialogOption(
+      child: const Text('Last 7 Days'),
+      onPressed: () {
+        final today = dateFormat.format(DateTime.now());
+        final todaydatetime = dateFormat.parse(today);
+        final week = todaydatetime.subtract(Duration(days: 7));
+        final weekformat = dateFormat.format(week);
+        getData(weekformat, today);
+        Navigator.pop(context);
+      },
+    );
+  }
+
+  Widget last30days(context) {
+    return SimpleDialogOption(
+      child: const Text('last 30 Days'),
+      onPressed: () {
+        final today = dateFormat.format(DateTime.now());
+        final todaydatetime = dateFormat.parse(today);
+        final month = todaydatetime.subtract(Duration(days: 30));
+        final monthformat = dateFormat.format(month);
+        getData(monthformat, today);
+        Navigator.pop(context);
+      },
+    );
+  }
+
+  Widget last365days(context) {
+    return SimpleDialogOption(
+      child: const Text('Last 365 Days'),
+      onPressed: () {
+        final today = dateFormat.format(DateTime.now());
+        final todaydatetime = dateFormat.parse(today);
+        final year = todaydatetime.subtract(Duration(days: 365));
+        final yearformat = dateFormat.format(year);
+        getData(yearformat, today);
+        Navigator.pop(context);
+      },
+    );
+  }
+
+  Widget customdate(context) {
     return SimpleDialogOption(
       child: const Text('Custom Date'),
       onPressed: () {
+        Navigator.pop(context);
         customDateRange(context);
       },
     );
@@ -100,11 +127,11 @@ class _PayableState extends State<Payable> {
               SimpleDialog dialog = SimpleDialog(
                 title: const Text('SELECT ONE OPTION:-'),
                 children: <Widget>[
-                  today,
-                  yesterday,
-                  last7days,
-                  last30days,
-                  last365days,
+                  today(context),
+                  yesterday(context),
+                  last7days(context),
+                  last30days(context),
+                  last365days(context),
                   customdate(context),
                 ],
               );
@@ -117,7 +144,60 @@ class _PayableState extends State<Payable> {
                 },
               );
             },
-            icon: const Icon(Icons.calendar_today))
+            icon: const Icon(Icons.calendar_today)),
+        IconButton(onPressed: () async {
+          final pdf = pw.Document();
+          pdf.addPage(pw.Page(
+              pageFormat: PdfPageFormat.a4,
+              build: (pw.Context context) {
+                return pw.Column(
+                    children: apidata["data"].map<pw.Column>((result) {
+                      return pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text(
+                            "PARTY NAME : " + result['GROUPCODE'],
+                            style: pw.TextStyle(
+                                color: PdfColors.blue,
+                                fontWeight: pw.FontWeight.bold),
+                          ),
+                          pw.SizedBox(
+                            height: 8,
+                          ),
+                          pw.Text("AREA : " + result['AREANAME']),
+                          pw.SizedBox(
+                            height: 8,
+                          ),
+                          pw.Text(
+                            "BALANCE : " + result['BILL_BAL_AMT'],
+                            style: pw.TextStyle(
+                                color: PdfColors.red, fontWeight: pw.FontWeight.bold),
+                          ),
+                          pw.SizedBox(
+                            height: 8,
+                          ),
+                          pw.Text("CASH BALANCE : " + result['CASH_BAL_AMT']),
+                          pw.SizedBox(
+                            height: 8,
+                          ),
+                          pw.Text("CHEQ BALANCE : " + result['CHEQ_BAL_AMT']),
+                          pw.SizedBox(
+                            height: 16,
+                          ),
+                          pw.Divider(
+                              color: PdfColors.black
+                          )
+                        ],
+                      );
+                    }).toList());
+              }));
+          Directory appDocDir = await getApplicationDocumentsDirectory();
+          String appDocPath = appDocDir.path;
+          final file = File(appDocPath + '/example.pdf');
+          await file.writeAsBytes(await pdf.save());
+          Share.shareFiles([appDocPath + '/example.pdf'],
+          text: 'Great picture');
+        }, icon: Icon(Icons.share))
       ],
     );
   }
@@ -162,68 +242,79 @@ class _PayableState extends State<Payable> {
         appBar: searchBar.build(context),
         body: loading
             ? const CircularProgressIndicator()
-            : ListView(
-                children: apidata["data"].map<Widget>((result) {
-                return InkWell(
-                  child: Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "PARTY NAME : " + result['GROUPCODE'],
-                            style: TextStyle(
-                                color: Colors.blue,
-                                fontWeight: FontWeight.bold),
+            : isDataEmpty
+                ? const Center(child: Text("No Data"))
+                : ListView(
+                    children: apidata["data"].map<Widget>((result) {
+                    return InkWell(
+                      child: Card(
+                        child: Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "PARTY NAME : " + result['GROUPCODE'],
+                                style: TextStyle(
+                                    color: Colors.blue,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(
+                                height: 8,
+                              ),
+                              Text("AREA : " + result['AREANAME']),
+                              const SizedBox(
+                                height: 8,
+                              ),
+                              Text(
+                                "BALANCE : " + result['BILL_BAL_AMT'],
+                                style: TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(
+                                height: 8,
+                              ),
+                              Text("CASH BALANCE : " + result['CASH_BAL_AMT']),
+                              const SizedBox(
+                                height: 8,
+                              ),
+                              Text("CHEQ BALANCE : " + result['CHEQ_BAL_AMT']),
+                            ],
                           ),
-                          const SizedBox(
-                            height: 8,
-                          ),
-                          Text("AREA : " + result['AREANAME']),
-                          const SizedBox(
-                            height: 8,
-                          ),
-                          Text(
-                            "BALANCE : " + result['BILL_BAL_AMT'],
-                            style: TextStyle(
-                                color: Colors.red, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(
-                            height: 8,
-                          ),
-                          Text("CASH BALANCE : " + result['CASH_BAL_AMT']),
-                          const SizedBox(
-                            height: 8,
-                          ),
-                          Text("CHEQ BALANCE : " + result['CHEQ_BAL_AMT']),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                PayableFilter(result['GROUPCODE'])));
-                  },
-                );
-              }).toList()));
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    PayableFilter(result['GROUPCODE'])));
+                      },
+                    );
+                  }).toList()));
   }
 
-  void getData() async {
+  void getData(startdate, enddate) async {
     setState(() {
       loading = true; //make loading true to show progressindicator
+      isDataEmpty = false;
     });
     FormData formData = FormData.fromMap({
       "server": "45.35.97.83",
       "username": "SIMPLYSOFT",
       "password": "PK@26~10#\$7860MP676\$",
-      "database": "DB_SIMPLYSOFT_MOBILE_AGENCY"
+      "database": "DB_SIMPLYSOFT_MOBILE_AGENCY",
+      "startdate": startdate,
+      "enddate": enddate,
     });
     response = await dio.post(Constants.PAYABLE, data: formData);
     apidata = json.decode(response.data);
+    if (apidata['response'] == 404) {
+      setState(() {
+        isDataEmpty = true;
+      });
+    }
     print(apidata['data']);
     loading = false;
     setState(() {});
@@ -235,13 +326,19 @@ class _PayableState extends State<Payable> {
       print("Scroll to bottom");
     }
   }
-  void customDateRange(context) async{
+
+  void customDateRange(context) async {
     DateTimeRange? picked = await showDateRangePicker(
         context: context,
         firstDate: DateTime(DateTime.now().year - 5),
         lastDate: DateTime(DateTime.now().year + 5),
         initialDateRange:
-        DateTimeRange(start: DateTime.now(), end: DateTime.now()));
+            DateTimeRange(start: DateTime.now(), end: DateTime.now()));
     print(picked);
+    var startdate = picked?.start;
+    var formattedstartdate = dateFormat.format(startdate!);
+    var enddate = picked?.end;
+    var formattedenddate = dateFormat.format(enddate!);
+    getData(formattedstartdate, formattedenddate);
   }
 }

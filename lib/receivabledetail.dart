@@ -48,6 +48,12 @@ class _ReceivableDetailState extends State<ReceivableDetail> {
                 build: (pw.Context context) {
                   return pw.Column(
                       children: [
+                        pw.Center(
+                          child:pw.Text("Receivable"),
+                        ),
+                        pw.SizedBox(
+                          height: 24,
+                        ),
                         pw.Row(
                           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: pw.CrossAxisAlignment.end,

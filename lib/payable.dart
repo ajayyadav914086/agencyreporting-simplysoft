@@ -145,59 +145,68 @@ class _PayableState extends State<Payable> {
               );
             },
             icon: const Icon(Icons.calendar_today)),
-        IconButton(onPressed: () async {
-          final pdf = pw.Document();
-          pdf.addPage(pw.Page(
-              pageFormat: PdfPageFormat.a4,
-              build: (pw.Context context) {
-                return pw.Column(
-                    children: apidata["data"].map<pw.Column>((result) {
-                      return pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: [
-                          pw.Text(
-                            "PARTY NAME : " + result['GROUPCODE'],
-                            style: pw.TextStyle(
-                                color: PdfColors.blue,
-                                fontWeight: pw.FontWeight.bold),
-                          ),
-                          pw.SizedBox(
-                            height: 8,
-                          ),
-                          pw.Text("AREA : " + result['AREANAME']),
-                          pw.SizedBox(
-                            height: 8,
-                          ),
-                          pw.Text(
-                            "BALANCE : " + result['BILL_BAL_AMT'],
-                            style: pw.TextStyle(
-                                color: PdfColors.red, fontWeight: pw.FontWeight.bold),
-                          ),
-                          pw.SizedBox(
-                            height: 8,
-                          ),
-                          pw.Text("CASH BALANCE : " + result['CASH_BAL_AMT']),
-                          pw.SizedBox(
-                            height: 8,
-                          ),
-                          pw.Text("CHEQ BALANCE : " + result['CHEQ_BAL_AMT']),
-                          pw.SizedBox(
-                            height: 16,
-                          ),
-                          pw.Divider(
-                              color: PdfColors.black
-                          )
-                        ],
-                      );
-                    }).toList());
-              }));
-          Directory appDocDir = await getApplicationDocumentsDirectory();
-          String appDocPath = appDocDir.path;
-          final file = File(appDocPath + '/example.pdf');
-          await file.writeAsBytes(await pdf.save());
-          Share.shareFiles([appDocPath + '/example.pdf'],
-          text: 'Great picture');
-        }, icon: Icon(Icons.share))
+        IconButton(
+            onPressed: () async {
+              final pdf = pw.Document();
+              pdf.addPage(pw.MultiPage(
+                  pageFormat: PdfPageFormat.a4,
+                  build: (pw.Context context) {
+                    return <pw.Widget>[
+                      pw.Center(
+                        child:pw.Text("Payable"),
+                      ),
+                      pw.SizedBox(
+                        height: 24,
+                      ),
+                      pw.Column(
+                          children: apidata["data"].map<pw.Column>((result) {
+                        return pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            pw.Text(
+                              "PARTY NAME : " + result['GROUPCODE'],
+                              style: pw.TextStyle(
+                                  color: PdfColors.blue,
+                                  fontWeight: pw.FontWeight.bold),
+                            ),
+                            pw.SizedBox(
+                              height: 8,
+                            ),
+                            pw.Text("AREA : " + result['AREANAME']),
+                            pw.SizedBox(
+                              height: 8,
+                            ),
+                            pw.Text(
+                              "BALANCE : " + result['BILL_BAL_AMT'],
+                              style: pw.TextStyle(
+                                  color: PdfColors.red,
+                                  fontWeight: pw.FontWeight.bold),
+                            ),
+                            pw.SizedBox(
+                              height: 8,
+                            ),
+                            pw.Text("CASH BALANCE : " + result['CASH_BAL_AMT']),
+                            pw.SizedBox(
+                              height: 8,
+                            ),
+                            pw.Text("CHEQ BALANCE : " + result['CHEQ_BAL_AMT']),
+                            pw.SizedBox(
+                              height: 16,
+                            ),
+                            pw.Divider(color: PdfColors.black)
+                          ],
+                        );
+                      }).toList())
+                    ];
+                  }));
+              Directory appDocDir = await getApplicationDocumentsDirectory();
+              String appDocPath = appDocDir.path;
+              final file = File(appDocPath + '/example.pdf');
+              await file.writeAsBytes(await pdf.save());
+              Share.shareFiles([appDocPath + '/example.pdf'],
+                  text: 'Great picture');
+            },
+            icon: Icon(Icons.share))
       ],
     );
   }

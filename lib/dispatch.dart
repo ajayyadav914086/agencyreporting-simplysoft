@@ -154,82 +154,88 @@ class _DispatchState extends State<Dispatch> {
         IconButton(
             onPressed: () async {
               final pdf = pw.Document();
-              pdf.addPage(pw.Page(
+              pdf.addPage(pw.MultiPage(
                   pageFormat: PdfPageFormat.a4,
                   build: (pw.Context context) {
-                    return pw.Column(
-                        children: apidata["data"].map<pw.Column>((result) {
-                          return pw.Column(
-                            children: [
-                              pw.Row(
-                                mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                children: [
-                                  pw.Text("VCH DATE: " + result['VCHDT']),
-                                  pw.Text("VCHNO: " + result['VCHNO'])
-                                ],
-                              ),
-                              pw.SizedBox(
-                                height: 8,
-                              ),
-                              pw.Row(
-                                mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                children: [
-                                  pw.Text(
-                                    "CUSTOMER: " + result['CUSTOMER'],
-                                  ),
-                                ],
-                              ),
-                              pw.SizedBox(
-                                height: 8,
-                              ),
-                              pw.Row(
-                                mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                children: [
-                                  pw.Text("SUPPLIER: " + result['SUPPLIER']),
-                                ],
-                              ),
-                              pw.SizedBox(
-                                height: 8,
-                              ),
-                              pw.Row(
-                                mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
-                                children: [
-                                  pw.Text("BILL DATE: " + result['BILLDT']),
-                                  pw.Text("BILL NO: " + result['BILLNO'])
-                                ],
-                              ),
-                              pw.SizedBox(
-                                height: 8,
-                              ),
-                              pw.Row(
-                                mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
-                                children: [
-                                  pw.Text("QTY: " + result['QTY']),
-                                  pw.Text(
-                                    "BILL AMT:" + result['BILL_AMT'],
-                                    style: pw.TextStyle(
-                                        fontWeight: pw.FontWeight.bold,
-                                        color: PdfColors.red),
-                                  )
-                                ],
-                              ),
-                              pw.SizedBox(
-                                height: 16,
-                              ),
-                              pw.Divider(
-                                color: PdfColors.black
-                              )
-                            ],
-                          );
-                        }).toList());
+                    return <pw.Widget>[
+                      pw.Center(
+                        child:pw.Text("Dispatch"),
+                      ),
+                      pw.SizedBox(
+                        height: 24,
+                      ),
+                      pw.Column(
+                          children: apidata["data"].map<pw.Column>((result) {
+                        return pw.Column(
+                          children: [
+                            pw.Row(
+                              mainAxisAlignment:
+                                  pw.MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: pw.CrossAxisAlignment.end,
+                              children: [
+                                pw.Text("VCH DATE: " + result['VCHDT']),
+                                pw.Text("VCHNO: " + result['VCHNO'])
+                              ],
+                            ),
+                            pw.SizedBox(
+                              height: 8,
+                            ),
+                            pw.Row(
+                              mainAxisAlignment:
+                                  pw.MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: pw.CrossAxisAlignment.end,
+                              children: [
+                                pw.Text(
+                                  "CUSTOMER: " + result['CUSTOMER'],
+                                ),
+                              ],
+                            ),
+                            pw.SizedBox(
+                              height: 8,
+                            ),
+                            pw.Row(
+                              mainAxisAlignment:
+                                  pw.MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: pw.CrossAxisAlignment.end,
+                              children: [
+                                pw.Text("SUPPLIER: " + result['SUPPLIER']),
+                              ],
+                            ),
+                            pw.SizedBox(
+                              height: 8,
+                            ),
+                            pw.Row(
+                              mainAxisAlignment:
+                                  pw.MainAxisAlignment.spaceBetween,
+                              children: [
+                                pw.Text("BILL DATE: " + result['BILLDT']),
+                                pw.Text("BILL NO: " + result['BILLNO'])
+                              ],
+                            ),
+                            pw.SizedBox(
+                              height: 8,
+                            ),
+                            pw.Row(
+                              mainAxisAlignment:
+                                  pw.MainAxisAlignment.spaceBetween,
+                              children: [
+                                pw.Text("QTY: " + result['QTY']),
+                                pw.Text(
+                                  "BILL AMT:" + result['BILL_AMT'],
+                                  style: pw.TextStyle(
+                                      fontWeight: pw.FontWeight.bold,
+                                      color: PdfColors.red),
+                                )
+                              ],
+                            ),
+                            pw.SizedBox(
+                              height: 16,
+                            ),
+                            pw.Divider(color: PdfColors.black)
+                          ],
+                        );
+                      }).toList())
+                    ];
                   }));
               Directory appDocDir = await getApplicationDocumentsDirectory();
               String appDocPath = appDocDir.path;

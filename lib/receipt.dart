@@ -7,6 +7,7 @@ import 'package:flutter_search_bar/flutter_search_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share/share.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -28,7 +29,8 @@ class _ReceiptState extends State<Receipt> {
   late SearchBar searchBar;
   late var startdate;
   late var enddate;
-  DateFormat dateFormat = DateFormat("yyyy-MM-dd");
+  DateFormat dateFormat = DateFormat("yyyy/MM/dd");
+  late SharedPreferences pref;
 
   @override
   void initState() {
@@ -153,7 +155,7 @@ class _ReceiptState extends State<Receipt> {
                   build: (pw.Context context) {
                     return <pw.Widget>[
                       pw.Center(
-                        child:pw.Text("Receipt"),
+                        child: pw.Text("Receipt"),
                       ),
                       pw.SizedBox(
                         height: 24,
@@ -214,10 +216,10 @@ class _ReceiptState extends State<Receipt> {
       loading = true;
     });
     FormData formData = FormData.fromMap({
-      "server": "45.35.97.83",
-      "username": "SIMPLYSOFT",
-      "password": "PK@26~10#\$7860MP676\$",
-      "database": "DB_SIMPLYSOFT_MOBILE_AGENCY",
+      "server": pref.get("ip"),
+      "username": pref.get("username"),
+      "password": pref.get("password"),
+      "database": pref.get("database"),
       "search": value.toString()
     });
     response = await dio.post(Constants.RECEIPT_SEARCH, data: formData);
@@ -251,53 +253,54 @@ class _ReceiptState extends State<Receipt> {
             : isDataEmpty
                 ? const Center(child: Text("No Data"))
                 : ListView(
+                    controller: _controller,
                     children: apidata["data"].map<Widget>((result) {
-                    return InkWell(
-                      child: Card(
-                        child: Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text("VCH DATE: " + result['VCHDT']),
-                                  Text("VCHNO: " + result['VCHNO'])
-                                ],
-                              ),
-                              const SizedBox(
-                                height: 8,
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text("NARRATION: " + result['NARRATION']),
-                                  Text(
-                                    "TOTAL AMT:" + result['TOTAL_AMT'],
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.red),
-                                  )
-                                ],
-                              ),
-                            ],
+                      return InkWell(
+                        child: Card(
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text("VCH DATE: " + result['VCHDT']),
+                                    Text("VCHNO: " + result['VCHNO'])
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 8,
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text("NARRATION: " + result['NARRATION']),
+                                    Text(
+                                      "TOTAL AMT:" + result['TOTAL_AMT'],
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.red),
+                                    )
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => ReceiptPaymentDetail(
-                                    "Receipt",
-                                    result['ENTRYID'].toString(),
-                                    result['TOTAL_AMT'].toString())));
-                      },
-                    );
-                  }).toList()));
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => ReceiptPaymentDetail(
+                                      "Receipt",
+                                      result['ENTRYID'].toString(),
+                                      result['TOTAL_AMT'].toString())));
+                        },
+                      );
+                    }).toList()));
   }
 
   void getData(startdate, enddate) async {
@@ -305,11 +308,12 @@ class _ReceiptState extends State<Receipt> {
       loading = true;
       isDataEmpty = false;
     });
+    pref = await SharedPreferences.getInstance();
     FormData formData = FormData.fromMap({
-      "server": "45.35.97.83",
-      "username": "SIMPLYSOFT",
-      "password": "PK@26~10#\$7860MP676\$",
-      "database": "DB_SIMPLYSOFT_MOBILE_AGENCY",
+      "server": pref.get("ip"),
+      "username": pref.get("username"),
+      "password": pref.get("password"),
+      "database": pref.get("database"),
       "startdate": startdate,
       "enddate": enddate,
     });

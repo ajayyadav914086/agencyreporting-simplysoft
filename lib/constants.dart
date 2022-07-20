@@ -1,5 +1,6 @@
 class Constants{
   static const BASE_URL = "https://license.simplysoft.co.in/agencyapi/";
+  static const API_URL = "https://license.simplysoft.co.in/api/";
   static const BASE_API =  "http://34.72.59.157/agency/";
   static const user_login = BASE_URL + "login.php";
   static const TOTAL = BASE_API + "getTotal.php";
@@ -25,4 +26,6 @@ class Constants{
   static const delete_image = BASE_URL + "api/product/picture/delete/";
   static const notificationUrl = "https://fcm.googleapis.com/fcm/send";
   static const token = "key=AAAAj_U8A5I:APA91bHHteH2JlBZo5AfFWMxuUTJWkqmMR9ejfADRb425BnjsWUPJIpYHri4EvXgtmnMsKtnDOf-CoJT-Qural15g4yrS97FOn2Oz3ecVzO9guHuoWeHk2tLvHnkMMq3uf_Fpm1UGaHu";
+  static const GET_COMPANY = API_URL + "getcompany.php";
+  static const GET_COMPANY_IP = API_URL + "getcompanylogin.php";
 }

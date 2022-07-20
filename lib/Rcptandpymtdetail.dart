@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share/share.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -29,6 +30,7 @@ class _ReceiptPaymentDetailState extends State<ReceiptPaymentDetail> {
   late String title;
   late String id;
   late String amt;
+  late SharedPreferences pref;
 
   _ReceiptPaymentDetailState(this.title, this.id, this.amt);
 
@@ -232,11 +234,12 @@ class _ReceiptPaymentDetailState extends State<ReceiptPaymentDetail> {
     setState(() {
       loading = true; //make loading true to show progressindicator
     });
+    pref = await SharedPreferences.getInstance();
     FormData formData = FormData.fromMap({
-      "server": "45.35.97.83",
-      "username": "SIMPLYSOFT",
-      "password": "PK@26~10#\$7860MP676\$",
-      "database": "DB_SIMPLYSOFT_MOBILE_AGENCY",
+      "server": pref.get("ip"),
+      "username": pref.get("username"),
+      "password": pref.get("password"),
+      "database": pref.get("database"),
       "id": id
     });
     response = await dio.post(Constants.RECEIPT_PAYMENT_DETAIL, data: formData);

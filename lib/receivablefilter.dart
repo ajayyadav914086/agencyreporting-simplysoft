@@ -8,6 +8,7 @@ import 'package:flutter_search_bar/flutter_search_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share/share.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -28,16 +29,20 @@ class _ReceivableFilterState extends State<ReceivableFilter> {
   bool loading = false;
   String groupcode;
   late SearchBar searchBar;
+  late ScrollController _controller;
   late var startdate;
   late var enddate;
-  DateFormat dateFormat = DateFormat("yyyy-MM-dd");
+  DateFormat dateFormat = DateFormat("yyyy/MM/dd");
   bool isDataEmpty = false;
+  late SharedPreferences pref;
 
   @override
   void initState() {
     startdate = dateFormat.format(DateTime.now().subtract(Duration(days: 30)));
     enddate = dateFormat.format(DateTime.now());
     getData(startdate, enddate);
+    _controller = ScrollController();
+    _controller.addListener(_scrollListener);
     super.initState();
   }
 
@@ -153,7 +158,7 @@ class _ReceivableFilterState extends State<ReceivableFilter> {
                   build: (pw.Context context) {
                     return <pw.Widget>[
                       pw.Center(
-                        child:pw.Text("Receivable"),
+                        child: pw.Text("Receivable"),
                       ),
                       pw.SizedBox(
                         height: 24,
@@ -272,10 +277,10 @@ class _ReceivableFilterState extends State<ReceivableFilter> {
       loading = true;
     });
     FormData formData = FormData.fromMap({
-      "server": "45.35.97.83",
-      "username": "SIMPLYSOFT",
-      "password": "PK@26~10#\$7860MP676\$",
-      "database": "DB_SIMPLYSOFT_MOBILE_AGENCY",
+      "server": pref.get("ip"),
+      "username": pref.get("username"),
+      "password": pref.get("password"),
+      "database": pref.get("database"),
       "group": groupcode,
       "search": value.toString()
     });
@@ -309,123 +314,125 @@ class _ReceivableFilterState extends State<ReceivableFilter> {
             : isDataEmpty
                 ? const Center(child: Text("No Data"))
                 : ListView(
+                    controller: _controller,
                     children: apidata["data"].map<Widget>((result) {
-                    return InkWell(
-                      child: Card(
-                        child: Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text("VCH NO: " + result['VCHNO']),
-                                  Text("BILL AMT: " + result['BILL_AMT'])
-                                ],
-                              ),
-                              const SizedBox(
-                                height: 8,
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text("VCH DATE: " + result['VCHDT']),
-                                  Text(
-                                    "BALANCE: " + result['BILL_BAL_AMT'],
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.red),
-                                  )
-                                ],
-                              ),
-                              const SizedBox(
-                                height: 8,
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text("PARTY: " + result['GROUPCODE']),
-                                ],
-                              ),
-                              const SizedBox(
-                                height: 8,
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text("SUPPLIER: " + result['SUPPLIER_NAME']),
-                                ],
-                              ),
-                              const SizedBox(
-                                height: 8,
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text("AREA: " + result['AREANAME']),
-                                ],
-                              ),
-                              const SizedBox(
-                                height: 8,
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text("CASH BALANCE: " +
-                                      result['CASH_BAL_AMT']),
-                                  Text("CHEQ BALANCE: " +
-                                      result['CHEQ_BAL_AMT']),
-                                ],
-                              ),
-                              const SizedBox(
-                                height: 8,
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text("NARRATION: " + result['NARRATION']),
-                                ],
-                              ),
-                              const SizedBox(
-                                height: 8,
-                              ),
-                            ],
+                      return InkWell(
+                        child: Card(
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text("VCH NO: " + result['VCHNO']),
+                                    Text("BILL AMT: " + result['BILL_AMT'])
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 8,
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text("VCH DATE: " + result['VCHDT']),
+                                    Text(
+                                      "BALANCE: " + result['BILL_BAL_AMT'],
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.red),
+                                    )
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 8,
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text("PARTY: " + result['GROUPCODE']),
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 8,
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                        "SUPPLIER: " + result['SUPPLIER_NAME']),
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 8,
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text("AREA: " + result['AREANAME']),
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 8,
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text("CASH BALANCE: " +
+                                        result['CASH_BAL_AMT']),
+                                    Text("CHEQ BALANCE: " +
+                                        result['CHEQ_BAL_AMT']),
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 8,
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text("NARRATION: " + result['NARRATION']),
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 8,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => ReceivableDetail(
-                                    result['WONO'].toString(),
-                                    new Outstanding(
-                                        result['VCHNO'],
-                                        result['VCHDT'],
-                                        result['BILL_AMT'],
-                                        result['BILL_BAL_AMT'],
-                                        result['GROUPCODE'],
-                                        result['SUPPLIER_NAME'],
-                                        result['AREANAME'],
-                                        result['CASH_BAL_AMT'],
-                                        result['CHEQ_BAL_AMT'],
-                                        result['NARRATION']))));
-                      },
-                    );
-                  }).toList()));
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => ReceivableDetail(
+                                      result['WONO'].toString(),
+                                      new Outstanding(
+                                          result['VCHNO'],
+                                          result['VCHDT'],
+                                          result['BILL_AMT'],
+                                          result['BILL_BAL_AMT'],
+                                          result['GROUPCODE'],
+                                          result['SUPPLIER_NAME'],
+                                          result['AREANAME'],
+                                          result['CASH_BAL_AMT'],
+                                          result['CHEQ_BAL_AMT'],
+                                          result['NARRATION']))));
+                        },
+                      );
+                    }).toList()));
   }
 
   void getData(startdate, enddate) async {
@@ -433,11 +440,12 @@ class _ReceivableFilterState extends State<ReceivableFilter> {
       loading = true; //make loading true to show progressindicator
       isDataEmpty = false;
     });
+    pref = await SharedPreferences.getInstance();
     FormData formData = FormData.fromMap({
-      "server": "45.35.97.83",
-      "username": "SIMPLYSOFT",
-      "password": "PK@26~10#\$7860MP676\$",
-      "database": "DB_SIMPLYSOFT_MOBILE_AGENCY",
+      "server": pref.get("ip"),
+      "username": pref.get("username"),
+      "password": pref.get("password"),
+      "database": pref.get("database"),
       "group": groupcode,
       "startdate": startdate,
       "enddate": enddate,
@@ -467,5 +475,12 @@ class _ReceivableFilterState extends State<ReceivableFilter> {
     var enddate = picked?.end;
     var formattedenddate = dateFormat.format(enddate!);
     getData(formattedstartdate, formattedenddate);
+  }
+
+  _scrollListener() {
+    if (_controller.offset >= _controller.position.maxScrollExtent &&
+        !_controller.position.outOfRange) {
+      print("Scroll to bottom");
+    }
   }
 }

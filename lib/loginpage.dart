@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
 import 'forgotpassword.dart';
+import 'model/Users.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -26,6 +27,7 @@ class _LoginPageState extends State<LoginPage> {
   String radioItem = '';
   String URL = '';
   final _form = GlobalKey<FormState>(); //for storing form state.
+  late Users saveUser;
 
   void togglePassword() {
     setState(() {
@@ -240,6 +242,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+
   Widget ForgetPasswordText() {
     return Text.rich(
       TextSpan(
@@ -261,11 +264,11 @@ class _LoginPageState extends State<LoginPage> {
             text: 'Forgot password',
             recognizer: TapGestureRecognizer()
               ..onTap = () => {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => ForgotPassword()))
-              },
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ForgotPassword()))
+                  },
             style: const TextStyle(
               color: Color(0xFFFF5844),
               fontWeight: FontWeight.w700,
@@ -282,50 +285,51 @@ class _LoginPageState extends State<LoginPage> {
         builder: (BuildContext context) {
           return Dialog(
               child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    CircularProgressIndicator(),
-                    SizedBox(
-                      width: 16,
-                    ),
-                    Text("login.....")
-                  ],
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                CircularProgressIndicator(),
+                SizedBox(
+                  width: 16,
                 ),
-              ));
+                Text("login.....")
+              ],
+            ),
+          ));
         });
     var params = {"username": phone.text, "password": password.text};
     URL = Constants.user_login;
     Response response = await Dio().post(URL, data: params);
+    print(response);
     var data = jsonDecode(response.toString());
-    print(data);
     if (data['response'] == 200) {
       Navigator.pop(context);
-      pref.setString("userid", data['data']['regId'].toString());
-      pref.setString("ip", data['data']['ip_address']);
-      pref.setString("database", data['data']['database_name']);
-      pref.setString("username", data['data']['database_username']);
-      pref.setString("password", data['data']['database_password']);
+      pref.setString("userid", data['data'][0]['regId'].toString());
+      pref.setString("ip", data['data'][0]['ip_address']);
+      pref.setString("cmp", data['data'][0]['cmp_name']);
+      pref.setString("database", data['data'][0]['database_name']);
+      pref.setString("username", data['data'][0]['database_username']);
+      pref.setString("password", data['data'][0]['database_password']);
       Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(
-              builder: (context) => const HomePage()),(route)=>false);
+          MaterialPageRoute(builder: (context) => const HomePage()),
+          (route) => false);
     } else {
       Navigator.pop(context);
       showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text("Login Failed"),
-            content: const Text("Username or password is incorrect"),
-            actions: [
-              ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text("OKAY")),
-            ],
-          ));
+                title: const Text("Login Failed"),
+                content: const Text("Username or password is incorrect"),
+                actions: [
+                  ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text("OKAY")),
+                ],
+              ));
     }
   }
 

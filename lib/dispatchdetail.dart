@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share/share.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -23,6 +24,7 @@ class _DispatchDetailState extends State<DispatchDetail> {
   var apidata;
   bool loading = false;
   late String id;
+  late SharedPreferences pref;
 
   _DispatchDetailState(this.id);
 
@@ -242,7 +244,7 @@ class _DispatchDetailState extends State<DispatchDetail> {
                                   "VCH DATE: " + apidata['data']['VCHDT'],
                                   style: const TextStyle(color: Colors.white),
                                 ),
-                                Text("VCHNO: " + apidata['data']['VCHNO'],
+                                Text("VCHNO: " + apidata['data']['VCHNO'].toString(),
                                     style: TextStyle(color: Colors.white))
                               ],
                             ),
@@ -410,11 +412,12 @@ class _DispatchDetailState extends State<DispatchDetail> {
     setState(() {
       loading = true; //make loading true to show progressindicator
     });
+    pref = await SharedPreferences.getInstance();
     FormData formData = FormData.fromMap({
-      "server": "45.35.97.83",
-      "username": "SIMPLYSOFT",
-      "password": "PK@26~10#\$7860MP676\$",
-      "database": "DB_SIMPLYSOFT_MOBILE_AGENCY",
+      "server": pref.get("ip"),
+      "username": pref.get("username"),
+      "password": pref.get("password"),
+      "database": pref.get("database"),
       "id": id
     });
     response = await dio.post(Constants.DISPATCH_DETAIL, data: formData);

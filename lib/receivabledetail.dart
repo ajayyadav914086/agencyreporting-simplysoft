@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share/share.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -27,6 +28,7 @@ class _ReceivableDetailState extends State<ReceivableDetail> {
   bool loading = false;
   late String id;
   Outstanding outstanding;
+  late SharedPreferences pref;
 
   @override
   void initState() {
@@ -358,11 +360,12 @@ class _ReceivableDetailState extends State<ReceivableDetail> {
     setState(() {
       loading = true; //make loading true to show progressindicator
     });
+    pref = await SharedPreferences.getInstance();
     FormData formData = FormData.fromMap({
-      "server": "45.35.97.83",
-      "username": "SIMPLYSOFT",
-      "password": "PK@26~10#\$7860MP676\$",
-      "database": "DB_SIMPLYSOFT_MOBILE_AGENCY",
+      "server": pref.get("ip"),
+      "username": pref.get("username"),
+      "password": pref.get("password"),
+      "database": pref.get("database"),
       "id": id
     });
     response = await dio.post(Constants.OUTSTANDING_DETAIL, data: formData);

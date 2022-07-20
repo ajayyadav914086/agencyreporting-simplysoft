@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "750394764102",
+    "project_id": "agency-reporting-b08b2",
+    "storage_bucket": "agency-reporting-b08b2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:750394764102:android:8316680509eea0a4225347",
+        "android_client_info": {
+          "package_name": "com.arsoftech.agencyreporting"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "750394764102-2pre1js76kofuofdrc38n718o59g6oao.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.arsoftech.agencyreporting",
+            "certificate_hash": "1be4b7ca3b303e9309a6066132761908e0c296c2"
+          }
+        },
+        {
+          "client_id": "750394764102-grlkgtjvaopokes99a87u56uk03ql7h0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvdUbNvVLlrJtoSM5xQ7q6oc4DvrSPhuI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "750394764102-grlkgtjvaopokes99a87u56uk03ql7h0.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "750394764102-cpudvdofmhn2uv4vaer9mq3si3u6dcc3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.arsoftech.agencyreporting"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

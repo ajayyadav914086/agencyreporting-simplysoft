@@ -9,6 +9,7 @@ import 'package:flutter_search_bar/flutter_search_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share/share.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'constants.dart';
 import 'dispatchdetail.dart';
@@ -33,8 +34,9 @@ class _DispatchState extends State<Dispatch> {
   late SearchBar searchBar;
   late var startdate;
   late var enddate;
-  DateFormat dateFormat = DateFormat("yyyy-MM-dd");
+  DateFormat dateFormat = DateFormat("yyyy/MM/dd");
   final pdf = pw.Document();
+  late SharedPreferences pref;
 
   @override
   void initState() {
@@ -255,16 +257,19 @@ class _DispatchState extends State<Dispatch> {
       loading = true;
     });
     FormData formData = FormData.fromMap({
-      "server": "45.35.97.83",
-      "username": "SIMPLYSOFT",
-      "password": "PK@26~10#\$7860MP676\$",
-      "database": "DB_SIMPLYSOFT_MOBILE_AGENCY",
+      "server": pref.get("ip"),
+      "username": pref.get("username"),
+      "password": pref.get("password"),
+      "database": pref.get("database"),
       "search": value.toString()
     });
     response = await dio.post(Constants.DISPATCH_SEARCH, data: formData);
     apidata = json.decode(response.data);
+    print(response.data);
     loading = false;
-    setState(() {});
+    setState(() {
+      isDataEmpty = false;
+    });
   }
 
   _DispatchState() {
@@ -304,7 +309,7 @@ class _DispatchState extends State<Dispatch> {
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Text("VCH DATE: " + result['VCHDT']),
-                                    Text("VCHNO: " + result['VCHNO'])
+                                    Text("VCHNO: " + result['VCHNO'].toString())
                                   ],
                                 ),
                                 const SizedBox(
@@ -381,16 +386,18 @@ class _DispatchState extends State<Dispatch> {
       loading = true;
       isDataEmpty = false;
     });
+    pref = await SharedPreferences.getInstance();
     FormData formData = FormData.fromMap({
-      "server": "45.35.97.83",
-      "username": "SIMPLYSOFT",
-      "password": "PK@26~10#\$7860MP676\$",
-      "database": "DB_SIMPLYSOFT_MOBILE_AGENCY",
+      "server": pref.get("ip"),
+      "username": pref.get("username"),
+      "password": pref.get("password"),
+      "database": pref.get("database"),
       "startdate": startdate,
       "enddate": enddate,
     });
     response = await dio.post(Constants.DISPATCH, data: formData);
     apidata = json.decode(response.data);
+    print(apidata);
     if (apidata['response'] == 404) {
       setState(() {
         isDataEmpty = true;

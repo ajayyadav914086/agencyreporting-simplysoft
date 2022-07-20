@@ -7,6 +7,7 @@ import 'package:flutter_search_bar/flutter_search_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share/share.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -28,7 +29,8 @@ class _PayableState extends State<Payable> {
   late var startdate;
   late var enddate;
   bool isDataEmpty = false;
-  DateFormat dateFormat = DateFormat("yyyy-MM-dd");
+  DateFormat dateFormat = DateFormat("yyyy/MM/dd");
+  late SharedPreferences pref;
 
   @override
   void initState() {
@@ -153,7 +155,7 @@ class _PayableState extends State<Payable> {
                   build: (pw.Context context) {
                     return <pw.Widget>[
                       pw.Center(
-                        child:pw.Text("Payable"),
+                        child: pw.Text("Payable"),
                       ),
                       pw.SizedBox(
                         height: 24,
@@ -217,10 +219,10 @@ class _PayableState extends State<Payable> {
       loading = true;
     });
     FormData formData = FormData.fromMap({
-      "server": "45.35.97.83",
-      "username": "SIMPLYSOFT",
-      "password": "PK@26~10#\$7860MP676\$",
-      "database": "DB_SIMPLYSOFT_MOBILE_AGENCY",
+      "server": pref.get("ip"),
+      "username": pref.get("username"),
+      "password": pref.get("password"),
+      "database": pref.get("database"),
       "search": value.toString()
     });
     response = await dio.post(Constants.PAYABLE_SEARCH, data: formData);
@@ -254,54 +256,57 @@ class _PayableState extends State<Payable> {
             : isDataEmpty
                 ? const Center(child: Text("No Data"))
                 : ListView(
+                    controller: _controller,
                     children: apidata["data"].map<Widget>((result) {
-                    return InkWell(
-                      child: Card(
-                        child: Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "PARTY NAME : " + result['GROUPCODE'],
-                                style: TextStyle(
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(
-                                height: 8,
-                              ),
-                              Text("AREA : " + result['AREANAME']),
-                              const SizedBox(
-                                height: 8,
-                              ),
-                              Text(
-                                "BALANCE : " + result['BILL_BAL_AMT'],
-                                style: TextStyle(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(
-                                height: 8,
-                              ),
-                              Text("CASH BALANCE : " + result['CASH_BAL_AMT']),
-                              const SizedBox(
-                                height: 8,
-                              ),
-                              Text("CHEQ BALANCE : " + result['CHEQ_BAL_AMT']),
-                            ],
+                      return InkWell(
+                        child: Card(
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "PARTY NAME : " + result['GROUPCODE'],
+                                  style: TextStyle(
+                                      color: Colors.blue,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(
+                                  height: 8,
+                                ),
+                                Text("AREA : " + result['AREANAME']),
+                                const SizedBox(
+                                  height: 8,
+                                ),
+                                Text(
+                                  "BALANCE : " + result['BILL_BAL_AMT'],
+                                  style: TextStyle(
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(
+                                  height: 8,
+                                ),
+                                Text(
+                                    "CASH BALANCE : " + result['CASH_BAL_AMT']),
+                                const SizedBox(
+                                  height: 8,
+                                ),
+                                Text(
+                                    "CHEQ BALANCE : " + result['CHEQ_BAL_AMT']),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    PayableFilter(result['GROUPCODE'])));
-                      },
-                    );
-                  }).toList()));
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      PayableFilter(result['GROUPCODE'])));
+                        },
+                      );
+                    }).toList()));
   }
 
   void getData(startdate, enddate) async {
@@ -309,15 +314,17 @@ class _PayableState extends State<Payable> {
       loading = true; //make loading true to show progressindicator
       isDataEmpty = false;
     });
+    pref = await SharedPreferences.getInstance();
     FormData formData = FormData.fromMap({
-      "server": "45.35.97.83",
-      "username": "SIMPLYSOFT",
-      "password": "PK@26~10#\$7860MP676\$",
-      "database": "DB_SIMPLYSOFT_MOBILE_AGENCY",
+      "server": pref.get("ip"),
+      "username": pref.get("username"),
+      "password": pref.get("password"),
+      "database": pref.get("database"),
       "startdate": startdate,
       "enddate": enddate,
     });
     response = await dio.post(Constants.PAYABLE, data: formData);
+    print(response);
     apidata = json.decode(response.data);
     if (apidata['response'] == 404) {
       setState(() {

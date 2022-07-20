@@ -1,13 +1,13 @@
 import 'dart:convert';
-
 import 'package:agencyreporting/dispatch.dart';
+import 'package:agencyreporting/loginpage.dart';
 import 'package:agencyreporting/payable.dart';
 import 'package:agencyreporting/payment.dart';
 import 'package:agencyreporting/receipt.dart';
 import 'package:agencyreporting/receivable.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
 
 class HomePage extends StatefulWidget {
@@ -18,10 +18,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late Response response;
+  late Response response,cmpResponse;
   Dio dio = Dio();
   var apidata;
-  bool loading = false;
+  var apicmpdata;
+  bool loading = true;
+  late SharedPreferences pref;
+  late List<String> _cmp = [];
+  late String selected;
 
   @override
   void initState() {
@@ -54,7 +58,7 @@ class _HomePageState extends State<HomePage> {
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Column(
+              child:Column(
                 children: <Widget>[
                   Container(
                     height: 64,
@@ -65,19 +69,54 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(
                           width: 16,
                         ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          // ignore: prefer_const_literals_to_create_immutables
-                          children: <Widget>[
-                            const Text(
-                              'SimplySoft',
-                              style: TextStyle(
-                                  fontFamily: "Montserrat Medium",
-                                  color: Colors.white,
-                                  fontSize: 20),
-                            ),
-                          ],
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                // ignore: prefer_const_literals_to_create_immutables
+                                children: <Widget>[
+                                  loading
+                                  ? CircularProgressIndicator()
+                                  : DropdownButton<String>(
+                                    hint: Text('Company Name'),
+                                    items: _cmp.map((String value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(value),
+                                      );
+                                    }).toList(),
+                                    value: selected,
+                                    onChanged: (newvalue) {
+                                      setState((){
+                                        selected = newvalue!;
+                                        changeLogin(newvalue);
+                                        print(selected);
+                                      });
+                                    },
+                                  ),
+                                  ElevatedButton(
+                                      onPressed: () {
+                                        pref.remove("userid");
+                                        pref.remove("ip");
+                                        pref.remove("database");
+                                        pref.remove("username");
+                                        pref.remove("password");
+                                        Navigator.pushAndRemoveUntil(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const LoginPage()),
+                                            (route) => false);
+                                      },
+                                      child: Text("SIGNOUT"))
+                                ],
+                              ),
+                            ],
+                          ),
                         )
                       ],
                     ),
@@ -113,10 +152,17 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 loading
                                     ? const CircularProgressIndicator()
-                                    :Text(
-                                  'Total RS '+apidata['data']['total_dispatch'],
-                                  style: cardTextStyle,
-                                )
+                                    : apidata['data']['total_dispatch'] == null
+                                        ? Text(
+                                            'Total RS ',
+                                            style: cardTextStyle,
+                                          )
+                                        : Text(
+                                            'Total RS ' +
+                                                apidata['data']
+                                                    ['total_dispatch'],
+                                            style: cardTextStyle,
+                                          )
                               ],
                             ),
                           ),
@@ -151,10 +197,16 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 loading
                                     ? const CircularProgressIndicator()
-                                    :Text(
-                                  'Total RS '+apidata['data']['total_recipt'],
-                                  style: cardTextStyle,
-                                )
+                                    : apidata['data']['total_receipt'] == null
+                                        ? Text(
+                                            'Total RS ',
+                                            style: cardTextStyle,
+                                          )
+                                        : Text(
+                                            'Total RS ' +
+                                                apidata['data']['total_recipt'],
+                                            style: cardTextStyle,
+                                          )
                               ],
                             ),
                           ),
@@ -189,14 +241,21 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 loading
                                     ? const CircularProgressIndicator()
-                                    :Text(
-                                  'Total RS '+apidata['data']['total_payment'],
-                                  style: cardTextStyle,
-                                )
+                                    : apidata['data']['total_payment'] == null
+                                        ? Text(
+                                            'Total RS ',
+                                            style: cardTextStyle,
+                                          )
+                                        : Text(
+                                            'Total RS ' +
+                                                apidata['data']
+                                                    ['total_payment'],
+                                            style: cardTextStyle,
+                                          )
                               ],
                             ),
                           ),
-                          onTap: (){
+                          onTap: () {
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -204,7 +263,7 @@ class _HomePageState extends State<HomePage> {
                           },
                         ),
                         InkWell(
-                          child:Card(
+                          child: Card(
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8)),
                             elevation: 4,
@@ -219,21 +278,30 @@ class _HomePageState extends State<HomePage> {
                                 const Text(
                                   'Receivable',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold, fontSize: 20),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20),
                                 ),
                                 const SizedBox(
                                   height: 6,
                                 ),
                                 loading
                                     ? const CircularProgressIndicator()
-                                    :Text(
-                                  'Total RS '+apidata['data']['total_receivable'],
-                                  style: cardTextStyle,
-                                )
+                                    : apidata['data']['total_receivable'] ==
+                                            null
+                                        ? Text(
+                                            'Total RS ',
+                                            style: cardTextStyle,
+                                          )
+                                        : Text(
+                                            'Total RS ' +
+                                                apidata['data']
+                                                    ['total_receivable'],
+                                            style: cardTextStyle,
+                                          )
                               ],
                             ),
                           ),
-                          onTap: (){
+                          onTap: () {
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -241,7 +309,7 @@ class _HomePageState extends State<HomePage> {
                           },
                         ),
                         InkWell(
-                          child:Card(
+                          child: Card(
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8)),
                             elevation: 4,
@@ -256,21 +324,23 @@ class _HomePageState extends State<HomePage> {
                                 const Text(
                                   'Payable',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold, fontSize: 20),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20),
                                 ),
                                 const SizedBox(
                                   height: 6,
                                 ),
                                 loading
                                     ? const CircularProgressIndicator()
-                                    :Text(
-                                  'Total RS '+apidata['data']['total_payable'],
-                                  style: cardTextStyle,
-                                )
+                                    : Text(
+                                        'Total RS ' +
+                                            apidata['data']['total_payable'],
+                                        style: cardTextStyle,
+                                      )
                               ],
                             ),
                           ),
-                          onTap: (){
+                          onTap: () {
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -316,19 +386,53 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
   void getData() async {
     setState(() {
-      loading = true; //make loading true to show progressindicator
+      loading = true;
     });
+    pref = await SharedPreferences.getInstance();
     FormData formData = FormData.fromMap({
-      "server": "45.35.97.83",
-      "username": "SIMPLYSOFT",
-      "password": "PK@26~10#\$7860MP676\$",
-      "database": "DB_SIMPLYSOFT_MOBILE_AGENCY"
+      "server": pref.get("ip"),
+      "username": pref.get("username"),
+      "password": pref.get("password"),
+      "database": pref.get("database")
     });
     response = await dio.post(Constants.TOTAL, data: formData);
     apidata = json.decode(response.data);
+    print(apidata);
+    FormData cmpData = FormData.fromMap({
+      "regid": pref.get("userid")
+    });
+    cmpResponse = await dio.post(Constants.GET_COMPANY,data: cmpData);
+    apicmpdata = jsonDecode(cmpResponse.data);
+    for(var i=0;i<apicmpdata['cmp'].length;i++){
+      _cmp.add(apicmpdata['cmp'][i]['cmp_name']);
+    }
+    print("CMP LENGTH ${_cmp.first}");
+
     loading = false;
-    setState(() {});
+    setState(() {
+      selected = _cmp.first;
+    });
+  }
+
+  void changeLogin(value)async{
+    _cmp.clear();
+    setState((){
+      loading = true;
+    });
+    FormData ipData = FormData.fromMap({
+      "cmp_name": value,
+    });
+    var ipresponse = await dio.post(Constants.GET_COMPANY_IP,data: ipData);
+    var ipdata = jsonDecode(ipresponse.data);
+    pref.setString("ip", ipdata['cmp']['ip_address']);
+    pref.setString("cmp", ipdata['cmp']['cmp_name']);
+    pref.setString("database", ipdata['cmp']['database_name']);
+    pref.setString("username", ipdata['cmp']['database_username']);
+    pref.setString("password", ipdata['cmp']['database_password']);
+    print(ipdata['cmp']['ip_address']);
+    getData();
   }
 }
